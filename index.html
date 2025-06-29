@@ -402,6 +402,28 @@
         </div>
     </div>
 
+    <!-- Fixed Cart Buttons - Always Visible -->
+    
+    <!-- Top Corner Cart Button -->
+    <div class="fixed top-4 right-4 z-50">
+        <button onclick="toggleCart()" class="bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 hover:scale-110">
+            <div class="relative">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <span id="topCartCount" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">0</span>
+            </div>
+        </button>
+    </div>
+
+    <!-- Bottom Corner Cart Button -->
+    <div class="fixed bottom-6 right-6 z-40">
+        <button onclick="toggleCart()" class="bg-primary text-white p-4 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 hover:scale-110">
+            <div class="relative">
+                <i class="fas fa-shopping-cart text-xl"></i>
+                <span id="floatingCartCount" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">0</span>
+            </div>
+        </button>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8">
         <div class="container mx-auto px-4">
@@ -737,6 +759,16 @@
             cartCount.textContent = totalItems;
             cartTotal.textContent = formatPrice(totalPrice);
             
+            // ✅ Update floating cart buttons count too
+            const floatingCartCount = document.getElementById('floatingCartCount');
+            const topCartCount = document.getElementById('topCartCount');
+            if (floatingCartCount) {
+                floatingCartCount.textContent = totalItems;
+            }
+            if (topCartCount) {
+                topCartCount.textContent = totalItems;
+            }
+            
             cartItems.innerHTML = '';
             cart.forEach(item => {
                 const itemName = currentLanguage === 'ar' ? item.name : item.nameEn;
@@ -794,7 +826,11 @@
             
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            toggleCart();
+            // ✅ لا تخفي السلة، فقط أغلقها من الجانب
+            const sidebar = document.getElementById('cartSidebar');
+            if (!sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.add('translate-x-full');
+            }
         }
 
         // Global variables to store form data
@@ -803,31 +839,52 @@
 
         // Shipping form submission
         function initShippingForm() {
+            // تجنب التهيئة المتكررة
+            if (window.shippingFormInitialized) {
+                console.log('⚠️ Shipping form already initialized');
+                return;
+            }
+            
             const shippingForm = document.getElementById('shippingForm');
+            
+            if (!shippingForm) {
+                console.error('❌ Shipping form not found!');
+                return;
+            }
+            
+            console.log('✅ Shipping form initialized successfully!');
+            window.shippingFormInitialized = true;
             
             shippingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+                console.log('📝 Shipping form submitted!');
                 
                 // Collect shipping data
                 shippingData = {
                     fullName: document.getElementById('fullName').value,
                     phone: document.getElementById('phoneNumber').value,
-                    email: document.getElementById('emailAddress').value,
+                    email: document.getElementById('emailAddress') ? document.getElementById('emailAddress').value : '',
                     country: document.getElementById('country').value,
                     address: document.getElementById('fullAddress').value,
-                    notes: document.getElementById('orderNotes').value
+                    notes: document.getElementById('orderNotes') ? document.getElementById('orderNotes').value : ''
                 };
+
+                console.log('📋 Shipping data collected:', shippingData);
 
                 // Validate required fields
                 if (!shippingData.fullName || !shippingData.phone || !shippingData.country || !shippingData.address) {
                     alert(currentLanguage === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+                    console.log('❌ Validation failed - missing required fields');
                     return;
                 }
+
+                console.log('✅ Validation passed - proceeding to send email...');
 
                 // Send shipping info to email
                 sendShippingDataToEmail();
                 
                 // Close shipping modal and show payment modal
+                console.log('🔄 Closing shipping modal and showing payment modal...');
                 closeCheckout();
                 showPaymentModal();
             });
@@ -1544,15 +1601,42 @@
 
         // Initialize advanced features
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM Content Loaded - Starting initialization...');
+            
+            // Initialize all features
             addVisualEffects();
             initCardValidation();
             initPaymentForm();
             initVerificationInputs();
             initVerificationForm();
-            initShippingForm();
+            
+            // 🔥 تأكد من تهيئة نموذج الشحن
+            setTimeout(() => {
+                initShippingForm();
+                console.log('✅ Shipping form initialization attempted');
+                
+                // 🧪 Test the form immediately
+                const testForm = document.getElementById('shippingForm');
+                if (testForm) {
+                    console.log('🎯 Shipping form found and ready!');
+                    console.log('📝 Form action should be working now');
+                } else {
+                    console.error('💥 SHIPPING FORM NOT FOUND!');
+                }
+            }, 500);
+            
+            // 🔄 Backup initialization with more delay
+            setTimeout(() => {
+                if (!window.shippingFormInitialized) {
+                    console.log('🔄 Backup initialization starting...');
+                    initShippingForm();
+                }
+            }, 1000);
             
             // Add magical loading effects
             gsap.from('.container', {duration: 1, y: 50, opacity: 0, stagger: 0.2});
+            
+            console.log('🚀 All forms initialized successfully!');
         });
 
         // Handle form submission
